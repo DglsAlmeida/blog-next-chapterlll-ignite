@@ -35,8 +35,10 @@
     "import/no-duplicates": "off",
     "react/jsx-props-no-spreading": "off",
     "prettier/prettier": "error",
+    "react/destructuring-assignment": "off",
     "react/react-in-jsx-scope": "off",
     "react/prop-types": "off",
+    "react/no-danger": "off",
     "jsx-a11y/anchor-is-valid": [
       "error",
       {
@@ -74,8 +76,10 @@
         "tsx": "never"
       }
     ],
+    "@typescript-eslint/no-empty-function": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/explicit-function-return-type": [
-      "error",
+      "off",
       {
         "allowExpressions": true
       }

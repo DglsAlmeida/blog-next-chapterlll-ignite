@@ -1,1 +1,15 @@
-// TODO
+.container {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 30px;
+
+  div {
+    width: 30%;
+
+    img {
+      margin-top: 25px;
+    }
+  }
+}
