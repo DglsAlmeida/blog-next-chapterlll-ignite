@@ -4,6 +4,7 @@ import { FiUser, FiCalendar } from 'react-icons/fi';
 import Prismic from '@prismicio/client';
 import { format } from 'date-fns';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { getPrismicClient } from '../services/prismic';
 
 import commonStyles from '../styles/common.module.scss';
@@ -29,7 +30,32 @@ interface HomeProps {
 }
 
 export default function Home({ postsPagination }: HomeProps) {
-  const { results, next_page } = postsPagination;
+  const [posts, setPosts] = useState<Post[]>(postsPagination.results);
+  const [nextPage, setNextPage] = useState(postsPagination.next_page);
+
+  function loadingMorePages() {
+    fetch(nextPage)
+      .then(res => res.json())
+      .then(res => {
+        const newPosts = res.results.map(newPost => {
+          return {
+            uid: newPost.uid,
+            first_publication_date: format(
+              new Date(newPost.first_publication_date),
+              'dd MMM yyyy'
+            ),
+            data: {
+              author: newPost.data.author,
+              title: newPost.data.title,
+              subtitle: newPost.data.subtitle,
+            },
+          };
+        });
+        setPosts(oldpost => [...oldpost, ...newPosts]);
+        setNextPage(res.next_page);
+        console.log(res.next_page);
+      });
+  }
 
   return (
     <>
@@ -40,7 +66,7 @@ export default function Home({ postsPagination }: HomeProps) {
         <div className={styles.posts}>
           <img src="/images/logo.svg" alt="logo" />
 
-          {results.map(post => (
+          {posts.map(post => (
             <Link key={post.uid} href={`/post/${post.uid}`}>
               <a>
                 <h1>{post.data.title}</h1>
@@ -59,7 +85,11 @@ export default function Home({ postsPagination }: HomeProps) {
             </Link>
           ))}
 
-          {next_page && <button type="button">Carregar mais posts</button>}
+          {nextPage && (
+            <button onClick={loadingMorePages} type="button">
+              Carregar mais posts
+            </button>
+          )}
         </div>
       </main>
     </>
@@ -72,11 +102,11 @@ export const getStaticProps: GetStaticProps = async () => {
     [Prismic.predicates.at('document.type', 'posts-blog')],
     {
       fetch: ['publication.títle', 'publication.subtítle'],
-      pageSize: 5,
+      pageSize: 1,
     }
   );
 
-  // console.log(JSON.stringify(postsResponse, null, 2));
+  console.log(JSON.stringify(postsResponse, null, 2));
 
   const results = postsResponse.results.map(post => {
     return {
@@ -100,5 +130,6 @@ export const getStaticProps: GetStaticProps = async () => {
         next_page: postsResponse.next_page,
       },
     },
+    revalidate: 60 * 30,
   };
 };
