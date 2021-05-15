@@ -2,12 +2,11 @@ import { GetStaticProps } from 'next';
 import Head from 'next/head';
 import { FiUser, FiCalendar } from 'react-icons/fi';
 import Prismic from '@prismicio/client';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
+import ptBR from 'date-fns/locale/pt-BR';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { getPrismicClient } from '../services/prismic';
-
-import commonStyles from '../styles/common.module.scss';
 import styles from './home.module.scss';
 
 interface Post {
@@ -53,7 +52,6 @@ export default function Home({ postsPagination }: HomeProps) {
         });
         setPosts(oldpost => [...oldpost, ...newPosts]);
         setNextPage(res.next_page);
-        console.log(res.next_page);
       });
   }
 
@@ -74,7 +72,13 @@ export default function Home({ postsPagination }: HomeProps) {
                 <div>
                   <span>
                     <FiCalendar />
-                    {post.first_publication_date}
+                    {format(
+                      new Date(post.first_publication_date),
+                      'dd MMM yyyy',
+                      {
+                        locale: ptBR,
+                      }
+                    )}
                   </span>
                   <span>
                     <FiUser />
@@ -106,15 +110,10 @@ export const getStaticProps: GetStaticProps = async () => {
     }
   );
 
-  console.log(JSON.stringify(postsResponse, null, 2));
-
   const results = postsResponse.results.map(post => {
     return {
       uid: post.uid,
-      first_publication_date: format(
-        new Date(post.first_publication_date),
-        'dd MMM yyyy'
-      ),
+      first_publication_date: post.first_publication_date,
       data: {
         title: post.data.title,
         subtitle: post.data.subtitle,
