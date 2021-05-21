@@ -10,6 +10,7 @@ import Prismic from '@prismicio/client';
 import { useRouter } from 'next/router';
 import ApiSearchResponse from '@prismicio/client/types/ApiSearchResponse';
 import { useEffect } from 'react';
+import UtterancesComments from '../../components/Comments';
 import Header from '../../components/Header';
 
 import { getPrismicClient } from '../../services/prismic';
@@ -42,19 +43,6 @@ interface PostProps {
 
 export default function Post({ post, prevPost, nextPost }: PostProps) {
   const { isFallback } = useRouter();
-
-  useEffect(() => {
-    const scriptElem = document.createElement('script');
-    const elem = document.getElementById('inject-comments-for-uterances');
-    scriptElem.src = 'https://utteranc.es/client.js';
-    scriptElem.async = true;
-    scriptElem.crossOrigin = 'anonymous';
-    scriptElem.setAttribute('repo', 'DglsAlmeida/blog-next-chapterlll-ignite');
-    scriptElem.setAttribute('issue-term', 'pathname');
-    scriptElem.setAttribute('label', 'blog-comment');
-    scriptElem.setAttribute('theme', 'github-dark');
-    elem.appendChild(scriptElem);
-  }, []);
 
   if (isFallback) {
     return <p>Carregando...</p>;
@@ -110,17 +98,15 @@ export default function Post({ post, prevPost, nextPost }: PostProps) {
 
             <span className={styles.editContent}>{edited}</span>
 
-            {post.data.content.map(({ heading, body }) => (
-              <>
-                <article key={post.uid} className={styles.text}>
-                  <h2>{heading}</h2>
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: RichText.asHtml(body),
-                    }}
-                  />
-                </article>
-              </>
+            {post.data.content.map(({ heading, body }, index) => (
+              <article key={index} className={styles.text}>
+                <h2>{heading}</h2>
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html: RichText.asHtml(body),
+                  }}
+                />
+              </article>
             ))}
             <div className={styles.prevAndNext}>
               {prevPost &&
@@ -145,7 +131,8 @@ export default function Post({ post, prevPost, nextPost }: PostProps) {
             </div>
           </article>
         </div>
-        <div id="inject-comments-for-uterances" />
+
+        <UtterancesComments />
       </main>
     </>
   );
@@ -161,7 +148,7 @@ export const getStaticPaths = async () => {
   const postsUid = posts.results.map(post => {
     return {
       params: {
-        slug: String(post.uid),
+        slug: post.uid,
       },
     };
   });
