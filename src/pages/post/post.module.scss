@@ -21,7 +21,6 @@
 .mainContent {
   display: flex;
   align-items: center;
-  justify-content: center;
   flex-direction: column;
   margin-bottom: 20px;
 
@@ -39,24 +38,33 @@
   }
 
   article {
-    width: 30%;
+    width: 50%;
+  }
+
+  & .text {
+    width: 80%;
   }
 }
 
 .text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   margin-top: 50px;
   line-height: 25px;
+  width: 80%;
 
   h2 {
     color: #f8f8f8;
     font-size: 30px;
     margin-bottom: 40px;
-    line-height: 25px;
+    line-height: 30px;
   }
 
   li {
     color: #D7D7D7;
     margin-top: 15px;
+    list-style: none;
   }
 
   p {
@@ -76,6 +84,7 @@
   display: flex;
   border-top: 1px solid #D7D7D7;
   margin-top: 60px;
+  width: 100%;
 
   a {
     margin: 60px 0 40px 0;

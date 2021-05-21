@@ -110,15 +110,17 @@ export default function Post({ post, prevPost, nextPost }: PostProps) {
 
             <span className={styles.editContent}>{edited}</span>
 
-            {post.data.content.map(({ heading, body }, key) => (
-              <div key={`${post.uid}.${key}`} className={styles.text}>
-                <h2>{heading}</h2>
-                <div
-                  dangerouslySetInnerHTML={{
-                    __html: RichText.asHtml(body),
-                  }}
-                />
-              </div>
+            {post.data.content.map(({ heading, body }) => (
+              <>
+                <article key={post.uid} className={styles.text}>
+                  <h2>{heading}</h2>
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: RichText.asHtml(body),
+                    }}
+                  />
+                </article>
+              </>
             ))}
             <div className={styles.prevAndNext}>
               {prevPost &&
