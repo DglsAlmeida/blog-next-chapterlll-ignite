@@ -4,9 +4,12 @@ import Head from 'next/head';
 import { FiUser, FiCalendar, FiClock } from 'react-icons/fi';
 import { format, parseISO } from 'date-fns';
 import ptBR from 'date-fns/locale/pt-BR';
+import Link from 'next/link';
 import { RichText } from 'prismic-dom';
 import Prismic from '@prismicio/client';
 import { useRouter } from 'next/router';
+import ApiSearchResponse from '@prismicio/client/types/ApiSearchResponse';
+import { useEffect } from 'react';
 import Header from '../../components/Header';
 
 import { getPrismicClient } from '../../services/prismic';
@@ -33,14 +36,46 @@ interface Post {
 
 interface PostProps {
   post: Post;
+  prevPost: ApiSearchResponse;
+  nextPost: ApiSearchResponse;
 }
 
-export default function Post({ post }: PostProps) {
+export default function Post({ post, prevPost, nextPost }: PostProps) {
   const { isFallback } = useRouter();
+
+  useEffect(() => {
+    const scriptElem = document.createElement('script');
+    const elem = document.getElementById('inject-comments-for-uterances');
+    scriptElem.src = 'https://utteranc.es/client.js';
+    scriptElem.async = true;
+    scriptElem.crossOrigin = 'anonymous';
+    scriptElem.setAttribute('repo', 'DglsAlmeida/blog-next-chapterlll-ignite');
+    scriptElem.setAttribute('issue-term', 'pathname');
+    scriptElem.setAttribute('label', 'blog-comment');
+    scriptElem.setAttribute('theme', 'github-dark');
+    elem.appendChild(scriptElem);
+  }, []);
 
   if (isFallback) {
     return <p>Carregando...</p>;
   }
+
+  const timeToRead = Math.ceil(
+    RichText.asText(
+      post.data.content.reduce(
+        (acc, currentValue) => [...acc, ...currentValue.body],
+        []
+      )
+    ).split(' ').length / 200
+  );
+
+  const edited = format(
+    parseISO(post.first_publication_date),
+    "'* editado em' dd MMM yyyy', às' HH:mm ",
+    {
+      locale: ptBR,
+    }
+  );
 
   return (
     <>
@@ -68,9 +103,13 @@ export default function Post({ post }: PostProps) {
               </span>
 
               <span>
-                <FiClock />4 min
+                <FiClock />
+                {timeToRead} min
               </span>
             </div>
+
+            <span className={styles.editContent}>{edited}</span>
+
             {post.data.content.map(({ heading, body }, key) => (
               <div key={`${post.uid}.${key}`} className={styles.text}>
                 <h2>{heading}</h2>
@@ -81,8 +120,30 @@ export default function Post({ post }: PostProps) {
                 />
               </div>
             ))}
+            <div className={styles.prevAndNext}>
+              {prevPost &&
+                prevPost.results.map(prevPostItem => (
+                  <Link href={`/post/${prevPostItem.uid}`}>
+                    <a>
+                      <h3>{prevPostItem?.data.title}</h3>
+                      <span>Post anterior</span>
+                    </a>
+                  </Link>
+                ))}
+
+              {nextPost &&
+                nextPost.results.map(nextPostItem => (
+                  <Link href={`/post/${nextPostItem.uid}`}>
+                    <a>
+                      <h3>{nextPostItem?.data.title}</h3>
+                      <span>Proximo Post</span>
+                    </a>
+                  </Link>
+                ))}
+            </div>
           </article>
         </div>
+        <div id="inject-comments-for-uterances" />
       </main>
     </>
   );
@@ -116,8 +177,27 @@ export const getStaticProps = async ({ params }) => {
 
   const response = await prismic.getByUID('posts-blog', String(slug), {});
 
+  const prevPost = await prismic.query(
+    Prismic.Predicates.at('document.type', 'posts-blog'),
+    {
+      pageSize: 1,
+      after: `${response.id}`,
+      orderings: '[document.first_publication_date desc]',
+    }
+  );
+
+  const nextPost = await prismic.query(
+    Prismic.Predicates.at('document.type', 'posts-blog'),
+    {
+      pageSize: 1,
+      after: `${response.id}`,
+      orderings: '[document.first_publication_date]',
+    }
+  );
+
   const post = {
     uid: response.uid,
+    last_publication_date: response.last_publication_date,
     first_publication_date: response.first_publication_date,
     data: {
       title: response.data.title,
@@ -139,6 +219,8 @@ export const getStaticProps = async ({ params }) => {
   return {
     props: {
       post,
+      nextPost,
+      prevPost,
     },
   };
 };
